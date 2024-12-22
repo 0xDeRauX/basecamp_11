@@ -1,47 +1,37 @@
+// basecamp_11 session 3
+
+// local dependance
+use basecamp_11::Counter;
+use basecamp_11::{
+    ICounterDispatcher, ICounterDispatcherTrait, ICounterSafeDispatcher,
+    ICounterSafeDispatcherTrait,
+};
+
+// dependance externe
 use starknet::ContractAddress;
+use snforge_std::{
+    declare, ContractClassTrait, DeclareResultTrait, start_cheat_caller_address,
+    stop_cheat_caller_address, spy_events, EventSpyAssertionsTrait,
+};
 
-use snforge_std::{declare, ContractClassTrait, DeclareResultTrait};
 
-use basecamp_11::IHelloStarknetSafeDispatcher;
-use basecamp_11::IHelloStarknetSafeDispatcherTrait;
-use basecamp_11::IHelloStarknetDispatcher;
-use basecamp_11::IHelloStarknetDispatcherTrait;
-
-fn deploy_contract(name: ByteArray) -> ContractAddress {
-    let contract = declare(name).unwrap().contract_class();
-    let (contract_address, _) = contract.deploy(@ArrayTrait::new()).unwrap();
-    contract_address
+fn OWNER() -> ContractAddress {
+    'OWNER'.try_into().unwrap()
 }
-
+    
 #[test]
-fn test_increase_balance() {
-    let contract_address = deploy_contract("HelloStarknet");
+fn test_deploy_contract(){
+    // déclare le contrat "Counter" et extrait la classe du contrat, ce qui est nécessaire pour le déployer.
+    let contract = declare("Counter") .unwrap() .contract_class();
+    
+    // serialize the calldata
+    // On récupére les donner du contract et du Counter initial sous forme 
+    let mut calldata = array![];
+    let inititial_count = 0;
+    inititial_count.serialize(ref calldata);
+    OWNER().serialize(ref calldata);
 
-    let dispatcher = IHelloStarknetDispatcher { contract_address };
+    // contrat est déployé en utilisant les données sérialisées dans calldata
+    let (contract_address, _) = contract.deploy(@calldata).unwrap();
 
-    let balance_before = dispatcher.get_balance();
-    assert(balance_before == 0, 'Invalid balance');
-
-    dispatcher.increase_balance(42);
-
-    let balance_after = dispatcher.get_balance();
-    assert(balance_after == 42, 'Invalid balance');
-}
-
-#[test]
-#[feature("safe_dispatcher")]
-fn test_cannot_increase_balance_with_zero_value() {
-    let contract_address = deploy_contract("HelloStarknet");
-
-    let safe_dispatcher = IHelloStarknetSafeDispatcher { contract_address };
-
-    let balance_before = safe_dispatcher.get_balance().unwrap();
-    assert(balance_before == 0, 'Invalid balance');
-
-    match safe_dispatcher.increase_balance(0) {
-        Result::Ok(_) => core::panic_with_felt252('Should have panicked'),
-        Result::Err(panic_data) => {
-            assert(*panic_data.at(0) == 'Amount cannot be 0', *panic_data.at(0));
-        }
-    };
 }
