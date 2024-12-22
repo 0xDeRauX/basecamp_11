@@ -37,13 +37,13 @@ pub mod Counter {
     }
 
     #[derive(Drop, starknet::Event)]
-    struct CounterIncreased {
-        counter: u32
+    pub struct CounterIncreased {
+        pub counter: u32
     }
     
     #[derive(Drop, starknet::Event)]
-    struct CounterDecreased {
-        counter: u32
+    pub struct CounterDecreased {
+        pub counter: u32
     }
 
     pub mod Errors {
